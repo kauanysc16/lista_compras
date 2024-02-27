@@ -38,8 +38,22 @@ class _ShoppingListState extends State<ShoppingList> {
 
   String dropdownValue = '1';
 
+  bool isSorted = false; // Variável para rastrear se a lista está ordenada
+
   @override
   Widget build(BuildContext context) {
+    double total = 0.0;
+
+    // Calcula o custo total dos itens
+    for (Item item in items) {
+      total += item.price * item.quantity;
+    }
+
+    // Ordena os itens por nome em ordem alfabética
+    if (isSorted) {
+      items.sort((a, b) => a.name.compareTo(b.name));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Lista de Compras'),
@@ -91,17 +105,43 @@ class _ShoppingListState extends State<ShoppingList> {
                   },
                   child: Text('Adicionar'),
                 ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    toggleSort();
+                  },
+                  child: Text(isSorted ? 'Ordenado' : 'Ordenar'),
+                ),
               ],
             ),
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: items.length,
+              itemCount: items.length + 1, // +1 para incluir o total
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text('${items[index].name} - \$${items[index].price.toStringAsFixed(2)}'),
-                  subtitle: Text('Quantidade: ${items[index].quantity}'),
-                );
+                if (index < items.length) {
+                  // Mostra os itens da lista
+                  return ListTile(
+                    title: Text(
+                        '${items[index].name} - ${items[index].price.toStringAsFixed(2)} x ${items[index].quantity}'),
+                    subtitle: Text(
+                        'Total: \$${(items[index].price * items[index].quantity).toStringAsFixed(2)}'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () {
+                        deleteItem(index);
+                      },
+                    ),
+                  );
+                } else {
+                  // Mostra o custo total
+                  return ListTile(
+                    title: Text(
+                      'Total: \$${total.toStringAsFixed(2)}',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  );
+                }
               },
             ),
           ),
@@ -123,5 +163,17 @@ class _ShoppingListState extends State<ShoppingList> {
     nameController.clear();
     priceController.clear();
     dropdownValue = '1';
+  }
+
+  void deleteItem(int index) {
+    setState(() {
+      items.removeAt(index);
+    });
+  }
+
+  void toggleSort() {
+    setState(() {
+      isSorted = !isSorted;
+    });
   }
 }
